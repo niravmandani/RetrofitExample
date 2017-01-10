@@ -1,0 +1,7 @@
+<resources>
+    <string name="app_name">User List</string>
+    <string name="title_section1">TitleSection1</string>
+    <string name="title_section2">TitleSection2</string>
+    <string name="title_section3">TitleSection3</string>
+
+</resources>
