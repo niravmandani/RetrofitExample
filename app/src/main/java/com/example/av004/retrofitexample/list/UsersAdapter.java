@@ -24,11 +24,12 @@ import butterknife.OnItemClick;
  */
 
 public class UsersAdapter extends RecyclerView.Adapter<UsersAdapter.MyViewHolder> {
+    private List<User> usersList;
+    public int position;
     OnUserSelectListener onUserSelectListener;
     OnUserDeleteListener onUserDeleteListener;
-    private List<User> usersList;
     Context context;
-    public int position;
+
 
 
     public interface OnUserDeleteListener {
@@ -52,8 +53,6 @@ public class UsersAdapter extends RecyclerView.Adapter<UsersAdapter.MyViewHolder
         public MyViewHolder(View view) {
             super(view);
             ButterKnife.bind(this, view);
-
-
         }
     }
 
@@ -69,7 +68,6 @@ public class UsersAdapter extends RecyclerView.Adapter<UsersAdapter.MyViewHolder
         ButterKnife.bind(this, itemView);
 
         return new MyViewHolder(itemView);
-
     }
 
     @Override
@@ -84,6 +82,7 @@ public class UsersAdapter extends RecyclerView.Adapter<UsersAdapter.MyViewHolder
             @Override
             @OnItemClick()
             public void onClick(View v) {
+
                 onUserSelectListener = (OnUserSelectListener) context;
                 onUserSelectListener.setOnUserSelect(position);
 
@@ -125,7 +124,7 @@ public class UsersAdapter extends RecyclerView.Adapter<UsersAdapter.MyViewHolder
         alert.setNegativeButton("CANCEL", new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int which) {
-                // TODO Auto-generated method stub
+
                 dialog.dismiss();
             }
         });
