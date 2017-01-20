@@ -7,7 +7,7 @@
     android:layout_height="match_parent"
     android:orientation="vertical"
     android:paddingBottom="5dp"
-    tools:context="com.example.av004.retrofitexample.UserDetails">
+    tools:context="com.example.av004.retrofitexample.Extra.UserDetails">
 
 
     <android.support.design.widget.TabLayout
@@ -24,8 +24,10 @@
 
     <android.support.v4.view.ViewPager
         android:id="@+id/viewpager"
+
         android:layout_width="match_parent"
         android:layout_height="match_parent">
+
 
     </android.support.v4.view.ViewPager>
 

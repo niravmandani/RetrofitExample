@@ -8,7 +8,9 @@
     android:paddingLeft="@dimen/activity_horizontal_margin"
     android:paddingRight="@dimen/activity_horizontal_margin"
     android:paddingTop="@dimen/activity_vertical_margin"
-    tools:context="com.example.av004.retrofitexample.UserDetails">
+    tools:actionBarNavMode="tabs"
+    android:background="#ffffff"
+    tools:context="com.example.av004.retrofitexample.Extra.UserDetails">
 
     <TextView
         android:id="@+id/textUserName"

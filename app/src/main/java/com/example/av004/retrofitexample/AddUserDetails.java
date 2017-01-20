@@ -8,6 +8,8 @@ import android.view.MenuItem;
 import android.widget.EditText;
 import android.widget.Toast;
 
+import com.example.av004.retrofitexample.model.User;
+
 import org.parceler.Parcels;
 
 import butterknife.Bind;
