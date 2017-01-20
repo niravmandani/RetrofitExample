@@ -89,9 +89,7 @@ public class UserDetails extends AppCompatActivity {
             tabLayout.setupWithViewPager(viewPager);
             customPagerAdapter.notifyDataSetChanged();
         }
-
     }
-
 }
 
 
