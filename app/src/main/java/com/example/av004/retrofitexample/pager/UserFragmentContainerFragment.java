@@ -31,33 +31,35 @@ import butterknife.ButterKnife;
 import static android.app.Activity.RESULT_OK;
 
 public class UserFragmentContainerFragment extends Fragment implements ViewPager.OnPageChangeListener, OnPageSelectedListener, PageSelector {
-    // TODO: Rename parameter arguments, choose names that match
+
     // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
     private static final String TAG = UserFragmentContainerFragment.class.getSimpleName();
+    private static final String KEY_STATE_CUR_USER_POSITION = "KEY_STATE_CUR_USER_POSITION";
     private static final int REQUEST_EDIT_USER = 12;
-    private Boolean mInitialCreate;
-    private int mCurUserPosition;
+    private Boolean initialCreate;
+    private int curUserPosition;
     private int DEFAULT_INDEX = 0;
     public int position;
+    private OnFragmentInteractionListener onFragmentInteractionListener;
+    private MyFragmentPagerAdapter myFragmentPagerAdapter;
     OnUserEditListener onUserEditListener;
-    private static final String KEY_STATE_CUR_USER_POSITION = "KEY_STATE_CUR_USER_POSITION";
-
     ViewPager viewPager;
     @Bind(R.id.sliding_tabs)
     TabLayout tabLayout;
     Context context;
-    private MyFragmentPagerAdapter myFragmentPagerAdapter;
-    OnPageSelectedListener parentOnPageSelectedListener;
+    OnPageSelectedListener onPageSelectedListener;
     List<User> userList;
-    private OnFragmentInteractionListener mListener;
+
 
     public UserFragmentContainerFragment() {
         // Required empty public constructor
     }
+
     public interface OnUserEditListener {
 
         void setOnUserEdit();
     }
+
     @Override
     public void onAttach(Activity activity) {
         super.onAttach(activity);
@@ -68,16 +70,16 @@ public class UserFragmentContainerFragment extends Fragment implements ViewPager
         // selection interface
         Fragment parentFragment = getParentFragment();
         if (parentFragment != null && parentFragment instanceof OnPageSelectedListener) {
-            parentOnPageSelectedListener = (OnPageSelectedListener) parentFragment;
+            onPageSelectedListener = (OnPageSelectedListener) parentFragment;
         }
         // Otherwise, check if parent activity implements the image
         // selection interface
         else if (activity != null && activity instanceof OnPageSelectedListener) {
-            parentOnPageSelectedListener = (OnPageSelectedListener) activity;
+            onPageSelectedListener = (OnPageSelectedListener) activity;
         }
         // If neither implements the image selection callback, warn that
         // selections are being missed
-        else if (parentOnPageSelectedListener == null) {
+        else if (onPageSelectedListener == null) {
             Log.w("", "onAttach: niether the parent fragment or parent activity implement OnImageSelectedListener, "
                     + "image selections will not be communicated to other components");
         }
@@ -88,17 +90,17 @@ public class UserFragmentContainerFragment extends Fragment implements ViewPager
         super.onCreate(savedInstanceState);
         // Restore state
         if (savedInstanceState != null) {
-            mInitialCreate = false;
+            initialCreate = false;
 
             //mCurImageResourceId = savedInstanceState.getInt(KEY_STATE_CUR_IMAGE_RESOURCE_ID);
-            mCurUserPosition = savedInstanceState.getInt(KEY_STATE_CUR_USER_POSITION);
+            curUserPosition = savedInstanceState.getInt(KEY_STATE_CUR_USER_POSITION);
         }
         // Otherwise, default state
         else {
-            mInitialCreate = true;
+            initialCreate = true;
 
-            mCurUserPosition = DEFAULT_INDEX;
-            // mCurImageResourceId = StaticImageData.getImageItemArrayInstance()[mCurImagePosition].getImageResId();
+            curUserPosition = DEFAULT_INDEX;
+
         }
 
         // Set that this fragment has a menu
@@ -132,10 +134,10 @@ public class UserFragmentContainerFragment extends Fragment implements ViewPager
         return v;
     }
 
-    // TODO: Rename method, update argument and hook method into UI event
+
     public void onButtonPressed(Uri uri) {
-        if (mListener != null) {
-            mListener.onFragmentInteraction(uri);
+        if (onFragmentInteractionListener != null) {
+            onFragmentInteractionListener.onFragmentInteraction(uri);
         }
     }
 
@@ -144,7 +146,7 @@ public class UserFragmentContainerFragment extends Fragment implements ViewPager
         super.onAttach(context);
 
         if (context instanceof OnFragmentInteractionListener) {
-            mListener = (OnFragmentInteractionListener) context;
+            onFragmentInteractionListener = (OnFragmentInteractionListener) context;
         } else {
             throw new RuntimeException(context.toString()
                     + " must implement OnFragmentInteractionListener");
@@ -193,7 +195,7 @@ public class UserFragmentContainerFragment extends Fragment implements ViewPager
         Log.v(TAG, "onSaveInstanceState");
 
         //  outState.putInt(KEY_STATE_CUR_IMAGE_RESOURCE_ID, mCurImageResourceId);
-        outState.putInt(KEY_STATE_CUR_USER_POSITION, mCurUserPosition);
+        outState.putInt(KEY_STATE_CUR_USER_POSITION, curUserPosition);
     }
 
     @Override
@@ -217,7 +219,7 @@ public class UserFragmentContainerFragment extends Fragment implements ViewPager
     @Override
     public void onDetach() {
         super.onDetach();
-        mListener = null;
+        onFragmentInteractionListener = null;
     }
 
     @Override
@@ -233,11 +235,10 @@ public class UserFragmentContainerFragment extends Fragment implements ViewPager
     @Override
     public void onPageSelected(int position) {
         /**if we want to set the list selected item Cheked */
-     /*      if (parentOnPageSelectedListener != null) {
-               parentOnPageSelectedListener.onPageSelected(position);
+          /* if (onPageSelectedListener != null) {
+               onPageSelectedListener.onPageSelected(position);
          }*/
     }
-
 
     @Override
     public void setPageSelected(int position) {
@@ -256,7 +257,7 @@ public class UserFragmentContainerFragment extends Fragment implements ViewPager
     }
 
     public interface OnFragmentInteractionListener {
-        // TODO: Update argument type and name
+
         void onFragmentInteraction(Uri uri);
 
     }
@@ -291,6 +292,7 @@ public class UserFragmentContainerFragment extends Fragment implements ViewPager
 
         // Inflate the action bar menu
         inflater.inflate(R.menu.edit_menu, menu);
+
     }
 
     @Override
@@ -301,6 +303,10 @@ public class UserFragmentContainerFragment extends Fragment implements ViewPager
                 position = viewPager.getCurrentItem();
                 intent.putExtra("position", position);
                 startActivityForResult(intent, REQUEST_EDIT_USER);
+                return true;
+            case android.R.id.home:
+
+
                 return true;
 
             default:
