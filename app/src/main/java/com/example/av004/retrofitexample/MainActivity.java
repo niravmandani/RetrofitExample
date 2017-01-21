@@ -10,7 +10,7 @@ import android.support.annotation.Nullable;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentTransaction;
 import android.support.v4.widget.SwipeRefreshLayout;
-import android.support.v7.app.ActionBarActivity;
+import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.DefaultItemAnimator;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
@@ -39,7 +39,7 @@ import retrofit.RetrofitError;
 import retrofit.client.Response;
 
 
-public class MainActivity extends ActionBarActivity implements SwipeRefreshLayout.OnRefreshListener, UsersAdapter.OnUserSelectListener, UserFragmentContainerFragment.OnFragmentInteractionListener, OnPageSelectedListener, UsersAdapter.OnUserDeleteListener, UserFragmentContainerFragment.OnUserEditListener {
+public class MainActivity extends AppCompatActivity implements SwipeRefreshLayout.OnRefreshListener, UsersAdapter.OnUserSelectListener, UserFragmentContainerFragment.OnFragmentInteractionListener, OnPageSelectedListener, UsersAdapter.OnUserDeleteListener, UserFragmentContainerFragment.OnUserEditListener {
     //Root URL of our web service
     private static final String ROOT_URL = "http://jsonplaceholder.typicode.com/";
     private static final int REQUEST_ADD_USER = 10;
