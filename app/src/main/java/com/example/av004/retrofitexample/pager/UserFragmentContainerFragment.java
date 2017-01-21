@@ -25,7 +25,6 @@ import com.raizlabs.android.dbflow.sql.language.SQLite;
 
 import java.util.List;
 
-import butterknife.Bind;
 import butterknife.ButterKnife;
 
 import static android.app.Activity.RESULT_OK;
@@ -44,7 +43,6 @@ public class UserFragmentContainerFragment extends Fragment implements ViewPager
     private MyFragmentPagerAdapter myFragmentPagerAdapter;
     OnUserEditListener onUserEditListener;
     ViewPager viewPager;
-    @Bind(R.id.sliding_tabs)
     TabLayout tabLayout;
     Context context;
     OnPageSelectedListener onPageSelectedListener;
@@ -121,13 +119,17 @@ public class UserFragmentContainerFragment extends Fragment implements ViewPager
                 from(User.class).queryList();
         position = getArguments().getInt("position");
         viewPager = (ViewPager) v.findViewById(R.id.viewpager);
-        tabLayout = (TabLayout) v.findViewById(R.id.sliding_tabs);
+       // tabLayout = (TabLayout) v.findViewById(R.id.sliding_tabs);
         myFragmentPagerAdapter = new MyFragmentPagerAdapter(userList);
         viewPager.setAdapter(myFragmentPagerAdapter);
         viewPager.setCurrentItem(position, false);
-        tabLayout.setTabGravity(TabLayout.GRAVITY_CENTER);
-        tabLayout.setTabMode(TabLayout.MODE_SCROLLABLE);
-        tabLayout.setupWithViewPager(viewPager);
+        tabLayout=(TabLayout) v.findViewById(R.id.sliding_tabs);
+        if(tabLayout!=null) {
+             tabLayout.setTabGravity(TabLayout.GRAVITY_CENTER);
+             tabLayout.setTabMode(TabLayout.MODE_SCROLLABLE);
+             tabLayout.setupWithViewPager(viewPager);
+
+        }
         // Listen for page changes to update other views
         viewPager.setOnPageChangeListener(this);
 
@@ -253,7 +255,6 @@ public class UserFragmentContainerFragment extends Fragment implements ViewPager
 
             }
         }
-
     }
 
     public interface OnFragmentInteractionListener {
@@ -304,8 +305,8 @@ public class UserFragmentContainerFragment extends Fragment implements ViewPager
                 intent.putExtra("position", position);
                 startActivityForResult(intent, REQUEST_EDIT_USER);
                 return true;
-            case android.R.id.home:
 
+            case android.R.id.home:
 
                 return true;
 
