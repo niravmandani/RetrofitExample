@@ -237,9 +237,9 @@ public class UserFragmentContainerFragment extends Fragment implements ViewPager
     @Override
     public void onPageSelected(int position) {
         /**if we want to set the list selected item Cheked */
-          /* if (onPageSelectedListener != null) {
+           if (onPageSelectedListener != null) {
                onPageSelectedListener.onPageSelected(position);
-         }*/
+         }
     }
 
     @Override
