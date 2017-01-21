@@ -9,8 +9,7 @@ import android.widget.EditText;
 
 import com.example.av004.retrofitexample.R;
 import com.example.av004.retrofitexample.model.User;
-import  com.example.av004.retrofitexample.model.User_Table;
-
+import com.example.av004.retrofitexample.model.User_Table;
 import com.raizlabs.android.dbflow.sql.language.SQLite;
 
 import java.util.List;
