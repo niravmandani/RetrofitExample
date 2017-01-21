@@ -67,6 +67,7 @@ public class MainActivity extends AppCompatActivity implements SwipeRefreshLayou
     ProgressDialog progressDialog;
     SharedPreferences preference;
     UserFragmentContainerFragment userFragmentContainerFragment;
+    private Boolean mInitialCreate;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -105,8 +106,9 @@ public class MainActivity extends AppCompatActivity implements SwipeRefreshLayou
         }
 
         if (savedInstanceState != null) {
-
+            mInitialCreate = false;
         } else {
+            mInitialCreate = true;
             //initialize User Detail fragment for Tablet
             if (activity_main_viewPager_container != null) {
                 Log.i("MainAcivityFragement:::", "onCreate: adding ImageRotatorFragment to MainActivity");
@@ -124,6 +126,17 @@ public class MainActivity extends AppCompatActivity implements SwipeRefreshLayou
                 // Commit the transaction
                 fragmentTransaction.commit();
             }
+        }
+        if (mInitialCreate && usersAdapter.getItemCount() > 0) {
+
+            // Default the selection to the first item
+            usersAdapter.setSelected(DEFAULT_INDEX);
+        }
+
+        // Track that onCreateView has been called at least once since the
+        // initial onCreate
+        if (mInitialCreate) {
+            mInitialCreate = false;
         }
     }
 
@@ -288,6 +301,9 @@ public class MainActivity extends AppCompatActivity implements SwipeRefreshLayou
 
     @Override
     public void onPageSelected(int position) {
+        usersAdapter.setSelected(position);
+        recyclerView.scrollToPosition(position);
+        usersAdapter.notifyDataSetChanged();
     }
 
     @Override
