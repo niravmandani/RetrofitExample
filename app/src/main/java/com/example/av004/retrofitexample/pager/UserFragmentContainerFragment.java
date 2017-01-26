@@ -5,7 +5,6 @@ import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
-import android.support.design.widget.TabLayout;
 import android.support.v4.app.Fragment;
 import android.support.v4.view.ViewPager;
 import android.util.Log;
@@ -15,6 +14,7 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.TextView;
 
 import com.example.av004.retrofitexample.Extra.EditUserActivity;
 import com.example.av004.retrofitexample.R;
@@ -25,6 +25,7 @@ import com.raizlabs.android.dbflow.sql.language.SQLite;
 
 import java.util.List;
 
+import butterknife.Bind;
 import butterknife.ButterKnife;
 
 import static android.app.Activity.RESULT_OK;
@@ -40,13 +41,16 @@ public class UserFragmentContainerFragment extends Fragment implements ViewPager
     private int DEFAULT_INDEX = 0;
     public int position;
     private OnFragmentInteractionListener onFragmentInteractionListener;
-    private MyFragmentPagerAdapter myFragmentPagerAdapter;
     OnUserEditListener onUserEditListener;
-    ViewPager viewPager;
-    TabLayout tabLayout;
     Context context;
     OnPageSelectedListener onPageSelectedListener;
     List<User> userList;
+    @Bind(R.id.textUserName)
+    TextView txtUserName;
+    @Bind(R.id.textUserEmail)
+    TextView txtUserEmail;
+    @Bind(R.id.textUserCity)
+    TextView txtUserCity;
 
 
     public UserFragmentContainerFragment() {
@@ -55,7 +59,7 @@ public class UserFragmentContainerFragment extends Fragment implements ViewPager
 
     public interface OnUserEditListener {
 
-        void setOnUserEdit();
+        void setOnUserEdit(int position);
     }
 
     @Override
@@ -86,7 +90,12 @@ public class UserFragmentContainerFragment extends Fragment implements ViewPager
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        //this.position=getArgumen
+        // ts().getInt("position");
         // Restore state
+        userList = SQLite.select().
+                from(User.class).queryList();
+        position = getArguments().getInt("position");
         if (savedInstanceState != null) {
             initialCreate = false;
 
@@ -109,38 +118,27 @@ public class UserFragmentContainerFragment extends Fragment implements ViewPager
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-
-        View v = inflater.inflate(R.layout.fragment_user_fragment_container, container, false);
-        ButterKnife.bind(this, v);
-
-        Log.d("UserFragmentContaerFrg", "userfrgContfrg called......");
-
+        View rootView = inflater.inflate(R.layout.fragment_user_fragment_container, container, false);
         userList = SQLite.select().
                 from(User.class).queryList();
-        position = getArguments().getInt("position");
-        viewPager = (ViewPager) v.findViewById(R.id.viewpager);
-       // tabLayout = (TabLayout) v.findViewById(R.id.sliding_tabs);
-        myFragmentPagerAdapter = new MyFragmentPagerAdapter(userList);
-        viewPager.setAdapter(myFragmentPagerAdapter);
-        viewPager.setCurrentItem(position, false);
-        tabLayout=(TabLayout) v.findViewById(R.id.sliding_tabs);
-        if(tabLayout!=null) {
-             tabLayout.setTabGravity(TabLayout.GRAVITY_CENTER);
-             tabLayout.setTabMode(TabLayout.MODE_SCROLLABLE);
-             tabLayout.setupWithViewPager(viewPager);
+        ButterKnife.bind(this, rootView);
+        // Get the arguments that was supplied when
+        // the fragment was instantiated in the
+        // CustomPagerAdapter
+        Log.d("UserFragment", userList.get(position).getName());
 
-        }
-        // Listen for page changes to update other views
-        viewPager.setOnPageChangeListener(this);
+        txtUserName.setText(userList.get(position).getName());
+        txtUserEmail.setText(userList.get(position).getEmail());
+        txtUserCity.setText(userList.get(position).getAddress().getCity());
+        return rootView;
 
-        return v;
     }
 
 
     public void onButtonPressed(Uri uri) {
-        if (onFragmentInteractionListener != null) {
+       /* if (onFragmentInteractionListener != null) {
             onFragmentInteractionListener.onFragmentInteraction(uri);
-        }
+        }*/
     }
 
     @Override
@@ -237,23 +235,17 @@ public class UserFragmentContainerFragment extends Fragment implements ViewPager
     @Override
     public void onPageSelected(int position) {
         /**if we want to set the list selected item Cheked */
-           if (onPageSelectedListener != null) {
-               onPageSelectedListener.onPageSelected(position);
-         }
+        if (onPageSelectedListener != null) {
+            onPageSelectedListener.onPageSelected(position);
+        }
     }
 
     @Override
     public void setPageSelected(int position) {
         if (isResumed()) {
-            // If the selected position is valid, and different than what is
-            // currently selected, move the pager to that image
-            if (position >= 0 && position < myFragmentPagerAdapter.getCount()
-                    && position != viewPager.getCurrentItem()) {
-                // Log.d(TAG, "setImageSelected: title = " + user.getTitle() + " position = " + position);
-                // Move the view pager to the current image
-                viewPager.setCurrentItem(position, true);
 
-            }
+                this.position = position;
+
         }
     }
 
@@ -264,26 +256,19 @@ public class UserFragmentContainerFragment extends Fragment implements ViewPager
     }
 
     public void updateUsers(List<User> userList, int position) {
-        //  List<User> userList = SQLite.select().
-        //        from(User.class).queryList();
+
         this.userList = userList;
         this.position = position;
 
-        if (myFragmentPagerAdapter != null) {
-            myFragmentPagerAdapter.updateUsers();
-            // tabLayout.setupWithViewPager(viewPager);
-            myFragmentPagerAdapter.notifyDataSetChanged();
-        } else {
-
-        }
     }
 
-    public void removeUser() {
-        List<User> userList = SQLite.select().
-                from(User.class).queryList();
+    public void removeUser(List<User> userList, int position) {
+
         this.userList = userList;
-        // this.position = position;
-        myFragmentPagerAdapter.removeUser(userList);
+        this.position = position;
+
+
+
     }
 
     @Override
@@ -301,7 +286,7 @@ public class UserFragmentContainerFragment extends Fragment implements ViewPager
         switch (item.getItemId()) {
             case R.id.action_editUser:
                 Intent intent = new Intent(getContext(), EditUserActivity.class);
-                position = viewPager.getCurrentItem();
+
                 intent.putExtra("position", position);
                 startActivityForResult(intent, REQUEST_EDIT_USER);
                 return true;
@@ -323,10 +308,12 @@ public class UserFragmentContainerFragment extends Fragment implements ViewPager
                 // do this if request code is 11.
                 List<User> userList = SQLite.select().
                         from(User.class).queryList();
+                this.userList=userList;
+
                 this.updateUsers(userList, position);
-                myFragmentPagerAdapter.notifyDataSetChanged();
+
                 onUserEditListener = (UserFragmentContainerFragment.OnUserEditListener) context;
-                onUserEditListener.setOnUserEdit();
+                onUserEditListener.setOnUserEdit(position);
             }
         }
     }
