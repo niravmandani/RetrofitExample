@@ -18,7 +18,7 @@ import android.util.Log;
 import android.view.ViewGroup;
 
 import com.example.av004.retrofitexample.Extra.DividerItemDecoration;
-import com.example.av004.retrofitexample.interfaces.OnPageSelectedListener;
+import com.example.av004.retrofitexample.Extra.UserDetails;
 import com.example.av004.retrofitexample.interfaces.UsersAPI;
 import com.example.av004.retrofitexample.list.UsersAdapter;
 import com.example.av004.retrofitexample.model.User;
@@ -39,7 +39,7 @@ import retrofit.RetrofitError;
 import retrofit.client.Response;
 
 
-public class MainActivity extends AppCompatActivity implements SwipeRefreshLayout.OnRefreshListener, UsersAdapter.OnUserSelectListener, UserFragmentContainerFragment.OnFragmentInteractionListener, OnPageSelectedListener, UsersAdapter.OnUserDeleteListener, UserFragmentContainerFragment.OnUserEditListener {
+public class MainActivity extends AppCompatActivity implements SwipeRefreshLayout.OnRefreshListener, UsersAdapter.OnUserSelectListener, UserFragmentContainerFragment.OnFragmentInteractionListener, UsersAdapter.OnUserDeleteListener, UserFragmentContainerFragment.OnUserEditListener {
     //Root URL of our web service
     private static final String ROOT_URL = "http://jsonplaceholder.typicode.com/";
     private static final int REQUEST_ADD_USER = 10;
@@ -48,7 +48,6 @@ public class MainActivity extends AppCompatActivity implements SwipeRefreshLayou
     private static final int DEFAULT_INDEX = 0;
     private UsersAdapter usersAdapter = null;
     int position = DEFAULT_INDEX;
-    int curPosition = DEFAULT_INDEX;
     boolean userLoaded;
     //List of type users this list will store type User which is our data model
     private List<User> users;
@@ -61,13 +60,14 @@ public class MainActivity extends AppCompatActivity implements SwipeRefreshLayou
     @Bind(R.id.activity_main_viewPager_container)
     ViewGroup activity_main_viewPager_container;
 
-    OnPageSelectedListener onPageSelectedListener;
-    UserFragmentContainerFragment containerFragment;
+
     ViewGroup container;
     ProgressDialog progressDialog;
     SharedPreferences preference;
+    User userSelected = new User();
     UserFragmentContainerFragment userFragmentContainerFragment;
     private Boolean mInitialCreate;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -77,7 +77,7 @@ public class MainActivity extends AppCompatActivity implements SwipeRefreshLayou
         getSupportActionBar().setElevation(0);
         getSupportActionBar().setTitle("User List");
 
-        container = (ViewGroup) findViewById(R.id.fragment_user_fragment_viewPager_container);
+        container = (ViewGroup) findViewById(R.id.activity_main_viewPager_container);
         preference = getSharedPreferences("pref", MODE_PRIVATE);
         userLoaded = preference.getBoolean("UserLoaded", false);
 
@@ -98,6 +98,8 @@ public class MainActivity extends AppCompatActivity implements SwipeRefreshLayou
         preference.getBoolean("UserLoaded", true);
         if (userLoaded) {
             //Shows the User List From Database
+            users = SQLite.select().
+                    from(User.class).queryList();
             showUserList();
         } else {
             //While the app fetched data displaying a progress dialog
@@ -112,7 +114,7 @@ public class MainActivity extends AppCompatActivity implements SwipeRefreshLayou
             //initialize User Detail fragment for Tablet
             if (activity_main_viewPager_container != null) {
                 Log.i("MainAcivityFragement:::", "onCreate: adding ImageRotatorFragment to MainActivity");
-
+                container = activity_main_viewPager_container;
                 // Add User Details fragment to the activity's container layout
                 userFragmentContainerFragment = new UserFragmentContainerFragment();
                 FragmentTransaction fragmentTransaction = getSupportFragmentManager().beginTransaction();
@@ -126,17 +128,6 @@ public class MainActivity extends AppCompatActivity implements SwipeRefreshLayou
                 // Commit the transaction
                 fragmentTransaction.commit();
             }
-        }
-        if (mInitialCreate && usersAdapter.getItemCount() > 0) {
-
-            // Default the selection to the first item
-            usersAdapter.setSelected(DEFAULT_INDEX);
-        }
-
-        // Track that onCreateView has been called at least once since the
-        // initial onCreate
-        if (mInitialCreate) {
-            mInitialCreate = false;
         }
     }
 
@@ -187,19 +178,27 @@ public class MainActivity extends AppCompatActivity implements SwipeRefreshLayou
 
         //Calling the method for showing the list
         showUserList();
-
     }
 
     //Our method to show list
     private void showUserList() {
-        List<User> userList = SQLite.select().
-                from(User.class).queryList();
-        usersAdapter = new UsersAdapter(MainActivity.this, userList);
+
+        usersAdapter = new UsersAdapter(MainActivity.this, users);
         recyclerView.setAdapter(usersAdapter);
         swipeRefreshLayout.setRefreshing(false);
         if (userFragmentContainerFragment != null) {
-            userFragmentContainerFragment.updateUsers(userList, position);
+            //position=DEFAULT_INDEX;
+            changeFragment(position);
+            //userFragmentContainerFragment.updateUsers(users, position);
+            userSelected = users.get(DEFAULT_INDEX);
+            usersAdapter.setSelected(userSelected);
+            changeFragment(position);
+            // userFragmentContainerFragment.setPageSelected(position);
+
         }
+        userSelected = users.get(DEFAULT_INDEX);
+        usersAdapter.setSelected(userSelected);
+        usersAdapter.notifyDataSetChanged();
     }
 
     //Floating Action Button Click Event
@@ -213,40 +212,42 @@ public class MainActivity extends AppCompatActivity implements SwipeRefreshLayou
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
-
         if (requestCode == REQUEST_ADD_USER) {
             if (resultCode == RESULT_OK) {
-
-                User user = (User) Parcels.unwrap(data.getParcelableExtra("user"));
-                List<User> userList = SQLite.select().
+                users=SQLite.select().
                         from(User.class).queryList();
-                usersAdapter.updateUsers(userList);
+                User user = (User) Parcels.unwrap(data.getParcelableExtra("user"));
+                usersAdapter.updateUsers(users);
                 usersAdapter.notifyDataSetChanged();
+
                 if (userFragmentContainerFragment != null) {
-                    userFragmentContainerFragment.updateUsers(userList, position);
+                    userFragmentContainerFragment.updateUsers(users, position);
                 }
+                userSelected = users.get(position);
+                usersAdapter.setSelected(userSelected);
             }
 
         } else if (requestCode == REQUEST_USER_DETAIL) {
             if (resultCode == RESULT_OK) {
-                // do this if request code is 11.
-                List<User> userList = SQLite.select().
+                users=SQLite.select().
                         from(User.class).queryList();
+                // do this if request code is 11.
                 if (userFragmentContainerFragment != null) {
-                    userFragmentContainerFragment.updateUsers(userList, position);
+                    userFragmentContainerFragment.updateUsers(users, position);
                 }
-                usersAdapter.updateUsers(userList);
+                userSelected = users.get(position);
+                usersAdapter.setSelected(userSelected);
+                usersAdapter.notifyDataSetChanged();
+                usersAdapter.updateUsers(users);
                 usersAdapter.notifyDataSetChanged();
             }
         } else if (requestCode == REQUEST_EDIT_USER) {
             if (resultCode == RESULT_OK) {
                 // do this if request code is 11.
-                List<User> userList = SQLite.select().
-                        from(User.class).queryList();
                 if (userFragmentContainerFragment != null) {
-                    userFragmentContainerFragment.updateUsers(userList, position);
+                    userFragmentContainerFragment.updateUsers(users, position);
                 }
-                usersAdapter.updateUsers(userList);
+                usersAdapter.updateUsers(users);
                 usersAdapter.notifyDataSetChanged();
             }
         }
@@ -254,43 +255,18 @@ public class MainActivity extends AppCompatActivity implements SwipeRefreshLayou
 
     @Override
     public void setOnUserSelect(int position) {
+        this.position = position;
 
-        container = (ViewGroup) findViewById(R.id.fragment_user_fragment_viewPager_container);
         if (container != null) {
-            //set on item click user detail in viewpager fragment in tablet
-            onPageSelectedListener = new OnPageSelectedListener() {
-                @Override
-                public void onPageSelected(int position) {
-                    if (curPosition != position) {
-
-                        curPosition = position;
-                        FragmentManager fragmentManager = getSupportFragmentManager();
-                        containerFragment = (UserFragmentContainerFragment) fragmentManager.findFragmentByTag(UserFragmentContainerFragment.class.getName());
-
-                        if (containerFragment != null) {
-                            containerFragment.setPageSelected(position);
-                        }
-                    }
-                }
-            };
-
-            onPageSelectedListener.onPageSelected(position);
+            changeFragment(position);
 
         } else {
-            //setting user detail fragment for Handset
-            FragmentManager fragmentManager = getSupportFragmentManager();
-            userFragmentContainerFragment = new UserFragmentContainerFragment();
-            FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
-            Bundle args = new Bundle();
-            args.putInt("position", position);
-            userFragmentContainerFragment.setArguments(args);
-            this.container = (ViewGroup) findViewById(R.id.activity_main_root_container);
-            fragmentTransaction.replace(container.getId(), userFragmentContainerFragment, UserFragmentContainerFragment.class.getName());
-            fragmentTransaction.setTransition(FragmentTransaction.TRANSIT_FRAGMENT_OPEN);
-            fragmentTransaction.addToBackStack(null);
-
-            // Commit the transaction
-            fragmentTransaction.commit();
+            userSelected = users.get(position);
+            usersAdapter.setSelected(userSelected);
+            usersAdapter.notifyDataSetChanged();
+            Intent intent = new Intent(this, UserDetails.class);
+            intent.putExtra("Position", position);
+            startActivityForResult(intent, REQUEST_USER_DETAIL);
         }
     }
 
@@ -299,28 +275,67 @@ public class MainActivity extends AppCompatActivity implements SwipeRefreshLayou
 
     }
 
-    @Override
-    public void onPageSelected(int position) {
-        usersAdapter.setSelected(position);
-        recyclerView.scrollToPosition(position);
+    public void changeFragment(int position) {
+        userSelected = users.get(position);
+        usersAdapter.setSelected(userSelected);
         usersAdapter.notifyDataSetChanged();
+        FragmentManager fragmentManager = getSupportFragmentManager();
+        userFragmentContainerFragment = new UserFragmentContainerFragment();
+        FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
+        Bundle args = new Bundle();
+        args.putInt("position", position);
+        userFragmentContainerFragment.setArguments(args);
+        fragmentTransaction.replace(container.getId(), userFragmentContainerFragment, UserFragmentContainerFragment.class.getName());
+
+        fragmentTransaction.commit();
+
     }
 
     @Override
-    public void setOnUserDelete() {
-        if (activity_main_viewPager_container != null) {
-            userFragmentContainerFragment.removeUser();
+    public void setOnUserDelete(int position) {
+        users.get(position).delete();
+        users.remove(position);
+
+        int newPosition = -1;
+
+        if (userSelected != null) {
+            for (int i = 0; i < users.size(); i++) {
+                if (users.get(i).getName().equals(userSelected.getName())) {
+                    newPosition = i;
+                    break;
+                }
+            }
+        }
+
+        if (newPosition == -1) {
+            newPosition = position < users.size() ? position : position - 1;
+        }
+
+        usersAdapter.notifyDataSetChanged();
+        userSelected = users.get(newPosition);
+        usersAdapter.setSelected(userSelected);
+        if (container != null) {
+            changeFragment(newPosition);
+
         } else {
 
         }
     }
 
     @Override
-    public void setOnUserEdit() {
+    public void setOnUserEdit(int position) {
         //on user edit notifydatasetchanged to users adapter
-        List<User> userList = SQLite.select().
+        users = SQLite.select().
                 from(User.class).queryList();
-        usersAdapter.updateUsers(userList);
+        usersAdapter.updateUsers(users);
         usersAdapter.notifyDataSetChanged();
+
+        if (container != null) {
+            changeFragment(position);
+
+        }
+        userSelected = users.get(position);
+        usersAdapter.setSelected(userSelected);
     }
+
 }
