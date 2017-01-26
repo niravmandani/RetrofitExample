@@ -1,16 +1,17 @@
 package com.example.av004.retrofitexample.Extra;
 
 import android.content.Intent;
+import android.net.Uri;
 import android.os.Bundle;
 import android.support.design.widget.TabLayout;
 import android.support.v4.view.ViewPager;
 import android.support.v7.app.AppCompatActivity;
-import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 
 import com.example.av004.retrofitexample.R;
 import com.example.av004.retrofitexample.model.User;
+import com.example.av004.retrofitexample.pager.UserFragmentContainerFragment;
 import com.raizlabs.android.dbflow.sql.language.SQLite;
 
 import java.util.List;
@@ -18,7 +19,7 @@ import java.util.List;
 import butterknife.Bind;
 import butterknife.ButterKnife;
 
-public class UserDetails extends AppCompatActivity {
+public class UserDetails extends AppCompatActivity implements UserFragmentContainerFragment.OnFragmentInteractionListener {
     @Bind(R.id.viewpager)
     ViewPager viewPager;
     @Bind(R.id.sliding_tabs)
@@ -38,7 +39,7 @@ public class UserDetails extends AppCompatActivity {
 
         List<User> userList = SQLite.select().
                 from(User.class).queryList();
-        Log.d("UserDetail", userList.get(position).getName());
+        //Log.d("UserDetail", userList.get(position).getName());
         customPagerAdapter = new CustomPagerAdapter(getSupportFragmentManager(), this, userList);
         // Attach the page change listener inside the activity
 
@@ -53,20 +54,14 @@ public class UserDetails extends AppCompatActivity {
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         // Inflate the menu; this adds items to the action bar if it is present.
-        getMenuInflater().inflate(R.menu.edit_menu, menu);
+        getMenuInflater().inflate(R.menu.user_detail, menu);
         return true;
     }
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
-            case R.id.action_editUser:
-                int position = viewPager.getCurrentItem();
-                Log.d("Current Item", String.valueOf(position));
-                Intent i = new Intent(this, EditUserActivity.class);
-                i.putExtra("position", position);
-                startActivityForResult(i, 2);
-                return true;
+
             case android.R.id.home:
                 Intent intent = new Intent();
                 position = viewPager.getCurrentItem();
@@ -89,6 +84,11 @@ public class UserDetails extends AppCompatActivity {
             tabLayout.setupWithViewPager(viewPager);
             customPagerAdapter.notifyDataSetChanged();
         }
+    }
+
+    @Override
+    public void onFragmentInteraction(Uri uri) {
+
     }
 }
 
