@@ -27,19 +27,12 @@ public class User extends BaseModel {
     private String name;
     @Column
     private String email;
-    @Column
-    private boolean selected;
 
     @ForeignKey(stubbedRelationship = true)
     private Address address;
 
 
-    public boolean isSelected() {
-        return selected;
-    }
-    public void setSelected(boolean selected) {
-        this.selected = selected;
-    }
+
 
     public int getUserId() {
         return userId;
