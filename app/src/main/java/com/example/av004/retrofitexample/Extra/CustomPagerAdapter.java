@@ -7,6 +7,8 @@ import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentStatePagerAdapter;
 import android.util.Log;
 
+import com.example.av004.retrofitexample.pager.UserFragmentContainerFragment;
+
 import com.example.av004.retrofitexample.model.User;
 
 import java.util.List;
@@ -17,9 +19,8 @@ import java.util.List;
 
 public class CustomPagerAdapter extends FragmentStatePagerAdapter {
     private Context context;
-    UserFragement fragment;
+    UserFragmentContainerFragment fragment;
     List<User> userList;
-
 
     public CustomPagerAdapter(FragmentManager supportFragmentManager, Context context, List<User> userList) {
         super(supportFragmentManager);
@@ -29,7 +30,7 @@ public class CustomPagerAdapter extends FragmentStatePagerAdapter {
 
     @Override
     public Fragment getItem(int position) {
-        fragment = new UserFragement();
+        fragment = new UserFragmentContainerFragment();
         Bundle args = new Bundle();
         Log.d("CustomPagerAdapter", userList.get(position).getName());
         args.putInt("position", position);
@@ -50,9 +51,13 @@ public class CustomPagerAdapter extends FragmentStatePagerAdapter {
 
     public void updateUsers(List<User> userList, int position) {
         this.userList = userList;
-        fragment.updateUsers(position);
+        fragment.updateUsers(userList, position);
         notifyDataSetChanged();
+    }
 
+    public void removeUser(List<User> userList) {
+        this.userList = userList;
+        notifyDataSetChanged();
     }
 
     @Override
