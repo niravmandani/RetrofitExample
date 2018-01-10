@@ -13,6 +13,6 @@ import retrofit.http.GET;
 
 public interface UsersAPI {
     @GET("/users")
-    void getUsers(Callback<List<User>> response);
+    List<User> getUsers();
 
 }

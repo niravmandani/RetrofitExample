@@ -16,6 +16,7 @@ import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.ViewGroup;
+import android.widget.Toast;
 
 import com.example.av004.retrofitexample.Extra.DividerItemDecoration;
 import com.example.av004.retrofitexample.Extra.UserDetails;
@@ -33,14 +34,16 @@ import java.util.List;
 import butterknife.Bind;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
-import retrofit.Callback;
 import retrofit.RestAdapter;
-import retrofit.RetrofitError;
-import retrofit.client.Response;
+import rx.Observable;
+import rx.Subscriber;
+import rx.android.schedulers.AndroidSchedulers;
+import rx.observers.Subscribers;
+import rx.schedulers.Schedulers;
 
 
 public class MainActivity extends AppCompatActivity implements SwipeRefreshLayout.OnRefreshListener, UsersAdapter.OnUserSelectListener, UserFragmentContainerFragment.OnFragmentInteractionListener, UsersAdapter.OnUserDeleteListener, UserFragmentContainerFragment.OnUserEditListener {
-    //Root URL of our web service
+    // Root URL of our web service
     private static final String ROOT_URL = "http://jsonplaceholder.typicode.com/";
     private static final int REQUEST_ADD_USER = 10;
     private static final int REQUEST_USER_DETAIL = 11;
@@ -88,24 +91,13 @@ public class MainActivity extends AppCompatActivity implements SwipeRefreshLayou
         swipeRefreshLayout.setDistanceToTriggerSync(20);
         swipeRefreshLayout.setSize(SwipeRefreshLayout.DEFAULT);
 
-        //Recycler View Decoration
+
         RecyclerView.LayoutManager layoutManager = new LinearLayoutManager(getApplicationContext());
         recyclerView.setLayoutManager(layoutManager);
         recyclerView.addItemDecoration(new DividerItemDecoration(this, LinearLayoutManager.VERTICAL));
         recyclerView.setItemAnimator(new DefaultItemAnimator());
         progressDialog = new ProgressDialog(MainActivity.this);
-
-        preference.getBoolean("UserLoaded", true);
-        if (userLoaded) {
-            //Shows the User List From Database
-            users = SQLite.select().
-                    from(User.class).queryList();
-            showUserList();
-        } else {
-            //While the app fetched data displaying a progress dialog
-            progressDialog = ProgressDialog.show(MainActivity.this, "Fetching Data", "Please wait...", false, false);
-            fetchUsers();
-        }
+        fetchUsers();
 
         if (savedInstanceState != null) {
             mInitialCreate = false;
@@ -119,13 +111,12 @@ public class MainActivity extends AppCompatActivity implements SwipeRefreshLayou
                 userFragmentContainerFragment = new UserFragmentContainerFragment();
                 FragmentTransaction fragmentTransaction = getSupportFragmentManager().beginTransaction();
                 Bundle args = new Bundle();
-                //Log.d("CustomPagerAdapter", userList.get(position).getName());
                 args.putInt("position", position);
                 userFragmentContainerFragment.setArguments(args);
                 fragmentTransaction.replace(activity_main_viewPager_container.getId(), userFragmentContainerFragment,
                         UserFragmentContainerFragment.class.getName());
 
-                // Commit the transaction
+
                 fragmentTransaction.commit();
             }
         }
@@ -134,7 +125,9 @@ public class MainActivity extends AppCompatActivity implements SwipeRefreshLayou
     public void onRefresh() {
         //Delete all the Users of the list and Load new Users from json
         Delete.table(User.class);
+        userLoaded=false;
         fetchUsers();
+
     }
 
     private void fetchUsers() {
@@ -144,29 +137,49 @@ public class MainActivity extends AppCompatActivity implements SwipeRefreshLayou
                 .setEndpoint(ROOT_URL)
                 .build();
 
+        Log.d("--", "fetchUsers: ");
+        progressDialog = ProgressDialog.show(MainActivity.this, "Fetching Data", "Please wait...", false, false);
         //Creating an object of our api interface
-        UsersAPI api = restAdapter.create(UsersAPI.class);
-
-        //Defining the method
-        api.getUsers(new Callback<List<User>>() {
+        final UsersAPI api = restAdapter.create(UsersAPI.class);
+        Observable<List<User>> myObservable = Observable.create(new Observable.OnSubscribe<List<User>>() {
             @Override
-            public void success(List<User> list, Response response) {
-                //Dismissing the loading progressbar
-                progressDialog.dismiss();
-                //Storing the data in our list
-                users = list;
-                //Storing Preference
-                preference.edit().putBoolean("UserLoaded", true).apply();
+            public void call(Subscriber<? super List<User>> subscriber) {
+                if (userLoaded) {
+                    //Shows the User List From Database
+                    subscriber.onNext(SQLite.select().
+                            from(User.class).queryList());
 
-                //Calling a method to insert the list
-                insertUsers();
-            }
+                    Log.d("from database..", "Called.............");
+                } else {
+                    //While the app fetched data displaying a progress dialog
 
-            @Override
-            public void failure(RetrofitError error) {
-                //you can handle the errors here
+                    subscriber.onNext(api.getUsers());
+                   // insertUsers();
+                    Log.d("Obsrevable..", "Called.............");
+                }
             }
         });
+        myObservable.subscribeOn(Schedulers.newThread()).observeOn(AndroidSchedulers.mainThread()).subscribe(list -> {
+            progressDialog.dismiss();
+            users = list;
+            Log.d("users", String.valueOf(users.size()));
+            if(userLoaded){
+                showUserList();
+            }else{
+                insertUsers();
+                preference.edit().putBoolean("UserLoaded", true).apply();
+            }
+
+
+        }, throwable -> {
+            Toast.makeText(this, "Request timeout..", Toast.LENGTH_SHORT).show();
+            swipeRefreshLayout.setRefreshing(false);
+            Log.d("Error...", throwable.getMessage());
+
+        }, () -> {
+        });
+
+
     }
 
     private void insertUsers() {
@@ -175,30 +188,38 @@ public class MainActivity extends AppCompatActivity implements SwipeRefreshLayou
 
             users.get(i).save();
         }
-
+        Log.d("insert...", "insertUsers: ...............");
         //Calling the method for showing the list
-        showUserList();
+       showUserList();
     }
 
     //Our method to show list
     private void showUserList() {
+        if (users.isEmpty()) {
 
-        usersAdapter = new UsersAdapter(MainActivity.this, users);
-        recyclerView.setAdapter(usersAdapter);
-        swipeRefreshLayout.setRefreshing(false);
-        if (userFragmentContainerFragment != null) {
-            //position=DEFAULT_INDEX;
-            changeFragment(position);
-            //userFragmentContainerFragment.updateUsers(users, position);
+            Log.d("user is empty..", "Fetching users........");
+            fetchUsers();
+        } else {
+            Log.d("user ", "Displaying userslist.......");
+            usersAdapter = new UsersAdapter(MainActivity.this, users);
+
+            recyclerView.setAdapter(usersAdapter);
+            swipeRefreshLayout.setRefreshing(false);
+            if (userFragmentContainerFragment != null) {
+                //position=DEFAULT_INDEX;
+                changeFragment(position);
+                //userFragmentContainerFragment.updateUsers(users, position);
+                userSelected = users.get(DEFAULT_INDEX);
+                usersAdapter.setSelected(userSelected);
+                changeFragment(position);
+                // userFragmentContainerFragment.setPageSelected(position);
+
+
+            }
             userSelected = users.get(DEFAULT_INDEX);
             usersAdapter.setSelected(userSelected);
-            changeFragment(position);
-            // userFragmentContainerFragment.setPageSelected(position);
-
+            usersAdapter.notifyDataSetChanged();
         }
-        userSelected = users.get(DEFAULT_INDEX);
-        usersAdapter.setSelected(userSelected);
-        usersAdapter.notifyDataSetChanged();
     }
 
     //Floating Action Button Click Event
@@ -214,7 +235,7 @@ public class MainActivity extends AppCompatActivity implements SwipeRefreshLayou
         super.onActivityResult(requestCode, resultCode, data);
         if (requestCode == REQUEST_ADD_USER) {
             if (resultCode == RESULT_OK) {
-                users=SQLite.select().
+                users = SQLite.select().
                         from(User.class).queryList();
                 User user = (User) Parcels.unwrap(data.getParcelableExtra("user"));
                 usersAdapter.updateUsers(users);
@@ -229,7 +250,7 @@ public class MainActivity extends AppCompatActivity implements SwipeRefreshLayou
 
         } else if (requestCode == REQUEST_USER_DETAIL) {
             if (resultCode == RESULT_OK) {
-                users=SQLite.select().
+                users = SQLite.select().
                         from(User.class).queryList();
                 // do this if request code is 11.
                 if (userFragmentContainerFragment != null) {
@@ -241,7 +262,7 @@ public class MainActivity extends AppCompatActivity implements SwipeRefreshLayou
                 usersAdapter.updateUsers(users);
                 usersAdapter.notifyDataSetChanged();
             }
-        } else if (requestCode == REQUEST_EDIT_USER) {
+        } /*else if (requestCode == REQUEST_EDIT_USER) {
             if (resultCode == RESULT_OK) {
                 // do this if request code is 11.
                 if (userFragmentContainerFragment != null) {
@@ -250,7 +271,7 @@ public class MainActivity extends AppCompatActivity implements SwipeRefreshLayou
                 usersAdapter.updateUsers(users);
                 usersAdapter.notifyDataSetChanged();
             }
-        }
+        }*/
     }
 
     @Override

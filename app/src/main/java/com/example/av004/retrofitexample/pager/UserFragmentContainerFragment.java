@@ -70,12 +70,11 @@ public class UserFragmentContainerFragment extends Fragment implements ViewPager
 
         // Check if parent fragment (if there is one) implements the image
         // selection interface
+
         Fragment parentFragment = getParentFragment();
         if (parentFragment != null && parentFragment instanceof OnPageSelectedListener) {
             onPageSelectedListener = (OnPageSelectedListener) parentFragment;
         }
-        // Otherwise, check if parent activity implements the image
-        // selection interface
         else if (activity != null && activity instanceof OnPageSelectedListener) {
             onPageSelectedListener = (OnPageSelectedListener) activity;
         }
@@ -118,6 +117,7 @@ public class UserFragmentContainerFragment extends Fragment implements ViewPager
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
+
         View rootView = inflater.inflate(R.layout.fragment_user_fragment_container, container, false);
         userList = SQLite.select().
                 from(User.class).queryList();
@@ -266,9 +266,6 @@ public class UserFragmentContainerFragment extends Fragment implements ViewPager
 
         this.userList = userList;
         this.position = position;
-
-
-
     }
 
     @Override

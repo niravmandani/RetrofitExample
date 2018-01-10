@@ -40,11 +40,11 @@ public class AddUserDetails extends AppCompatActivity {
     public void submit() {
 
         if (edtUserName.getText().toString().equalsIgnoreCase("")) {
-            edtUserName.setError("Enater Name");
+            edtUserName.setError("Enter Name");
         } else if (edtUserEmail.getText().toString().equalsIgnoreCase("")) {
-            edtUserEmail.setError("Enater Email");
+            edtUserEmail.setError("Enter Email");
         } else if (edtUserCity.getText().toString().equalsIgnoreCase("")) {
-            edtUserCity.setError("Enater City");
+            edtUserCity.setError("Enter City");
         } else {
             User user = new User();
             user.setName(edtUserName.getText().toString());

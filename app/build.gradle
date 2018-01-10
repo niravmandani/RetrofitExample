@@ -1,5 +1,6 @@
 apply plugin: 'com.android.application'
 apply plugin: 'com.neenbedankt.android-apt'
+apply plugin: 'me.tatarka.retrolambda'
 def dbflow_version = "4.0.0-beta3"
 
 android {
@@ -12,6 +13,8 @@ android {
         versionCode 1
         versionName "1.0"
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
+
+
     }
     buildTypes {
         release {
@@ -19,7 +22,12 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
     }
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
 }
+
 
 dependencies {
     compile fileTree(dir: 'libs', include: ['*.jar'])
@@ -32,12 +40,16 @@ dependencies {
     compile "com.github.Raizlabs.DBFlow:dbflow:${dbflow_version}"
 
     compile 'com.android.support:appcompat-v7:24.2.1'
+    compile 'com.rengwuxian.materialedittext:library:2.1.4'
     compile 'com.squareup.retrofit:retrofit:1.9.0'
     compile 'com.android.support:design:24.2.1'
     compile 'com.android.support:recyclerview-v7:24.2.1'
     compile 'com.jakewharton:butterknife:7.0.1'
     compile 'org.parceler:parceler-api:1.1.1'
+    compile 'io.reactivex:rxjava:1.1.7'
+    compile 'io.reactivex:rxandroid:1.1.0'
     compile 'com.android.support:support-v4:24.2.1'
     testCompile 'junit:junit:4.12'
     apt 'org.parceler:parceler:1.1.1'
+
 }

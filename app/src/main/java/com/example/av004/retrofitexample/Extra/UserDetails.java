@@ -39,7 +39,7 @@ public class UserDetails extends AppCompatActivity implements UserFragmentContai
 
         List<User> userList = SQLite.select().
                 from(User.class).queryList();
-        //Log.d("UserDetail", userList.get(position).getName());
+
         customPagerAdapter = new CustomPagerAdapter(getSupportFragmentManager(), this, userList);
         // Attach the page change listener inside the activity
 
